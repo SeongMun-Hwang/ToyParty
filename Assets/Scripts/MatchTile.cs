@@ -79,6 +79,20 @@ public class MatchTile : MonoBehaviour
         board.AttemptSwap(this, dragVector);
     }
 
+    public System.Collections.IEnumerator MoveToPosition(Vector3 targetPos, float duration)
+    {
+        float timer = 0f;
+        Vector3 startPos = transform.position;
+
+        while (timer < duration)
+        {
+            transform.position = Vector3.Lerp(startPos, targetPos, timer / duration);
+            timer += Time.deltaTime;
+            yield return null;
+        }
+        transform.position = targetPos;
+    }
+
     public void ResetPosition()
     {
         transform.position = board.GetTilePos(x, y);

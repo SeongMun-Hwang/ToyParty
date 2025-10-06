@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using DG.Tweening;
 
 public class HexBoard : MonoBehaviour
 {
@@ -37,6 +38,15 @@ public class HexBoard : MonoBehaviour
     [Header("Offsets")]
     public float xOffset = 0.9f;
     public float yOffset = 0.78f;
+
+    [Header("Timings")]
+    public float tileFallDuration = 0.2f;
+
+    [Header("UI Animation")]
+    public GameObject clownImagePrefab;
+    public RectTransform clownUITarget;
+    public Canvas canvas;
+    public float clownFlyDuration = 0.8f;
 
     private static readonly Vector2Int[] evenColNeighbors = { new Vector2Int(0, 1), new Vector2Int(1, 1), new Vector2Int(1, 0), new Vector2Int(0, -1), new Vector2Int(-1, 0), new Vector2Int(-1, 1) };
     private static readonly Vector2Int[] oddColNeighbors = { new Vector2Int(0, 1), new Vector2Int(1, 0), new Vector2Int(1, -1), new Vector2Int(0, -1), new Vector2Int(-1, -1), new Vector2Int(-1, 0) };
@@ -200,8 +210,8 @@ public class HexBoard : MonoBehaviour
         {
             if (pierrotMissionCount > 0)
             {
+                // The UI update is now handled by the animation coroutine
                 pierrotMissionCount--;
-                GameEvents.PierrotMissionUpdate(pierrotMissionCount);
 
                 Debug.Log($"삐에로 등장! 남은 횟수: {pierrotMissionCount}");
 
@@ -211,12 +221,7 @@ public class HexBoard : MonoBehaviour
                     animator.SetTrigger("Action");
                 }
 
-                if (pierrotMissionCount <= 0 && !isGameEnded)
-                {
-                    isGameEnded = true;
-                    GameEvents.MissionComplete();
-                    Debug.Log("미션 클리어!");
-                }
+                StartCoroutine(AnimateClownToUI(clown));
             }
         }
 
@@ -239,6 +244,8 @@ public class HexBoard : MonoBehaviour
     private IEnumerator DropAndCreateNewTiles()
     {
         yield return new WaitForSeconds(crushEffectDuration);
+
+        List<Coroutine> fallingTiles = new List<Coroutine>();
 
         for (int x = 0; x < width; x++)
         {
@@ -274,24 +281,35 @@ public class HexBoard : MonoBehaviour
                     MatchTile tileToPlace = columnTiles[currentTileIndex++];
                     matchTiles[x, y] = tileToPlace;
                     tileToPlace.y = y;
-                    tileToPlace.transform.position = GetTilePos(x, y);
+                    
+                    Vector3 targetPos = GetTilePos(x, y);
+                    fallingTiles.Add(StartCoroutine(tileToPlace.MoveToPosition(targetPos, tileFallDuration)));
                 }
                 else
                 {
-                    GameObject newTileObj = Instantiate(matchTilePrefab, GetTilePos(x, y), Quaternion.identity, transform);
+                    Vector3 spawnPos = GetTilePos(x, height);
+                    GameObject newTileObj = Instantiate(matchTilePrefab, spawnPos, Quaternion.identity, transform);
                     MatchTile newTile = newTileObj.GetComponent<MatchTile>();
                     ColorType color = (ColorType)Random.Range(0, System.Enum.GetValues(typeof(ColorType)).Length);
                     newTile.Init(x, y, color, this, MatchTile.TileType.Normal);
                     matchTiles[x, y] = newTile;
+
+                    Vector3 targetPos = GetTilePos(x, y);
+                    fallingTiles.Add(StartCoroutine(newTile.MoveToPosition(targetPos, tileFallDuration)));
                 }
             }
         }
 
-        yield return new WaitForSeconds(0.3f);
+        foreach (var coroutine in fallingTiles)
+        {
+            yield return coroutine;
+        }
+
+        yield return new WaitForSeconds(0.1f); 
 
         List<MatchTile> newMatches = FindAllMatches();
         if (newMatches.Count > 0)
-        { 
+        {
             RemoveAndRefill(newMatches);
         }
     }
@@ -394,6 +412,50 @@ public class HexBoard : MonoBehaviour
         }
 
         return new Vector2Int(x + neighbors[bestNeighborIndex].x, y + neighbors[bestNeighborIndex].y);
+    }
+
+    private IEnumerator AnimateClownToUI(MatchTile clown)
+    {
+        // Wait for clown's animation if any, assuming 0.5s for the "Action" trigger
+        yield return new WaitForSeconds(0.5f);
+
+        if (clownImagePrefab == null || clownUITarget == null || canvas == null)
+        {
+            Debug.LogWarning("Clown UI animation properties not set in HexBoard.");
+            yield break;
+        }
+
+        GameObject clownIcon = Instantiate(clownImagePrefab, canvas.transform);
+        clownIcon.transform.localScale = Vector3.one; // Ensure scale is correct
+
+        // Convert world point to screen point
+        Vector2 screenPoint = Camera.main.WorldToScreenPoint(clown.transform.position);
+
+        // Convert screen point to anchored position in the canvas
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.transform as RectTransform, screenPoint, canvas.worldCamera, out Vector2 anchoredPos);
+        clownIcon.GetComponent<RectTransform>().anchoredPosition = anchoredPos;
+
+        Vector3 startWorldPos = clownIcon.transform.position;
+        Vector3 endWorldPos = clownUITarget.position;
+
+        Vector3[] path = new Vector3[3];
+        path[0] = startWorldPos;
+        path[2] = endWorldPos;
+        path[1] = (path[0] + path[2]) / 2 + Vector3.down * 150f; // Control point for U-shape
+
+        clownIcon.transform.DOPath(path, clownFlyDuration, PathType.CatmullRom)
+            .SetEase(Ease.InOutQuad)
+            .OnComplete(() => {
+                Destroy(clownIcon);
+                GameEvents.PierrotMissionUpdate(pierrotMissionCount);
+
+                if (pierrotMissionCount <= 0 && !isGameEnded)
+                {
+                    isGameEnded = true;
+                    GameEvents.MissionComplete();
+                    Debug.Log("미션 클리어!");
+                }
+            });
     }
 
     #endregion
