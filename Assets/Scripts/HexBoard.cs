@@ -24,9 +24,11 @@ public class HexBoard : MonoBehaviour
     public Sprite orangeSprite;
 
     private MatchTile[,] matchTiles;
+    private bool isGameEnded = false;
 
     [Header("Mission")]
     public int pierrotMissionCount = 10;
+    public int maxMoves = 20;
 
     [Header("Effects")]
     public GameObject blockCrushEffectPrefab;
@@ -42,6 +44,10 @@ public class HexBoard : MonoBehaviour
     void Start()
     {
         GenerateBoard();
+
+        // UI 초기값 설정 이벤트 호출
+        GameEvents.PierrotMissionUpdate(pierrotMissionCount);
+        GameEvents.MoveCountUpdate(maxMoves);
     }
 
     public Sprite GetSprite(ColorType type)
@@ -119,6 +125,9 @@ public class HexBoard : MonoBehaviour
 
     public void AttemptSwap(MatchTile tile, Vector2 dragDirection)
     {
+        if (isGameEnded) return;
+        if (maxMoves <= 0) return; // 이동 횟수 없으면 스왑 불가
+
         Vector2Int targetCoords = GetNeighborFromDirection(tile.x, tile.y, dragDirection);
 
         if (!IsInBounds(targetCoords)) { tile.ResetPosition(); return; }
@@ -142,6 +151,8 @@ public class HexBoard : MonoBehaviour
 
         if (matches.Count > 0)
         {
+            maxMoves--;
+            GameEvents.MoveCountUpdate(maxMoves);
             RemoveAndRefill(matches);
         }
         else
@@ -190,12 +201,21 @@ public class HexBoard : MonoBehaviour
             if (pierrotMissionCount > 0)
             {
                 pierrotMissionCount--;
+                GameEvents.PierrotMissionUpdate(pierrotMissionCount);
+
                 Debug.Log($"삐에로 등장! 남은 횟수: {pierrotMissionCount}");
 
                 Animator animator = clown.GetComponent<Animator>();
                 if (animator != null)
                 {
                     animator.SetTrigger("Action");
+                }
+
+                if (pierrotMissionCount <= 0 && !isGameEnded)
+                {
+                    isGameEnded = true;
+                    GameEvents.MissionComplete();
+                    Debug.Log("미션 클리어!");
                 }
             }
         }
