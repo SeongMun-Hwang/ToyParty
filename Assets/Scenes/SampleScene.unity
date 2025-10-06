@@ -2187,12 +2187,17 @@ MonoBehaviour:
   yellowSprite: {fileID: 21300000, guid: a25c2d3cc4d7d664ca1b5649f96018fd, type: 3}
   purpleSprite: {fileID: 21300000, guid: cab497377be1c5d4ba95de77cf9fd536, type: 3}
   orangeSprite: {fileID: 21300000, guid: 249bfa095fbc0cc4facc3d48713e1eb2, type: 3}
-  pierrotMissionCount: 10
+  pierrotMissionCount: 20
   maxMoves: 20
   blockCrushEffectPrefab: {fileID: 1129813083377094, guid: df0e3d4335a7a1b489e90564f4f5a380, type: 3}
   crushEffectDuration: 0.5
   xOffset: 1.03
   yOffset: 0.94
+  tileFallDuration: 0.2
+  clownImagePrefab: {fileID: 5038960550630188244, guid: 70b19a778087c9f41923406c89fb3c49, type: 3}
+  clownUITarget: {fileID: 775793678}
+  canvas: {fileID: 1488537248}
+  clownFlyDuration: 0.8
 --- !u!4 &1852763858
 Transform:
   m_ObjectHideFlags: 0
