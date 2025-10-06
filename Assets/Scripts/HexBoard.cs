@@ -28,6 +28,10 @@ public class HexBoard : MonoBehaviour
     [Header("Mission")]
     public int pierrotMissionCount = 10;
 
+    [Header("Effects")]
+    public GameObject blockCrushEffectPrefab;
+    public float crushEffectDuration = 0.5f;
+
     [Header("Offsets")]
     public float xOffset = 0.9f;
     public float yOffset = 0.78f;
@@ -200,6 +204,10 @@ public class HexBoard : MonoBehaviour
         {
             if (match != null)
             {
+                if (blockCrushEffectPrefab != null)
+                {
+                    Instantiate(blockCrushEffectPrefab, match.transform.position, Quaternion.identity);
+                }
                 Destroy(match.gameObject);
                 matchTiles[match.x, match.y] = null;
             }
@@ -210,7 +218,7 @@ public class HexBoard : MonoBehaviour
 
     private IEnumerator DropAndCreateNewTiles()
     {
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(crushEffectDuration);
 
         for (int x = 0; x < width; x++)
         {
