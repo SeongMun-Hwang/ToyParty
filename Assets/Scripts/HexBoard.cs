@@ -26,6 +26,7 @@ public class HexBoard : MonoBehaviour
 
     private MatchTile[,] matchTiles;
     private bool isGameEnded = false;
+    private int totalScore = 0;
 
     [Header("Mission")]
     public int pierrotMissionCount = 10;
@@ -187,6 +188,23 @@ public class HexBoard : MonoBehaviour
 
     void RemoveAndRefill(List<MatchTile> matches)
     {
+        // 점수 계산 및 이벤트 발생
+        if (matches.Count > 0)
+        {
+            int scoreFromMatch = matches.Count * 20;
+            totalScore += scoreFromMatch;
+
+            Vector3 averagePos = Vector3.zero;
+            foreach (var match in matches)
+            {
+                averagePos += match.transform.position;
+            }
+            averagePos /= matches.Count;
+
+            GameEvents.ScoreGained(scoreFromMatch, averagePos);
+            GameEvents.ScoreUpdated(totalScore);
+        }
+
         HashSet<MatchTile> triggeredClowns = new HashSet<MatchTile>();
         foreach (var matchedTile in matches)
         {
@@ -210,6 +228,12 @@ public class HexBoard : MonoBehaviour
         {
             if (pierrotMissionCount > 0)
             {
+                // 삐에로 점수 추가
+                int clownScore = 300;
+                totalScore += clownScore;
+                GameEvents.ScoreGained(clownScore, clown.transform.position);
+                GameEvents.ScoreUpdated(totalScore);
+
                 // The UI update is now handled by the animation coroutine
                 pierrotMissionCount--;
 
