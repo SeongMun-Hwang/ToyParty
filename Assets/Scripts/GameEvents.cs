@@ -22,4 +22,8 @@ public static class GameEvents
     // 총 점수가 업데이트될 때 호출될 이벤트
     public static event Action<int> OnScoreUpdated;
     public static void ScoreUpdated(int totalScore) => OnScoreUpdated?.Invoke(totalScore);
+
+    // 게임 오버 시 호출될 이벤트
+    public static event Action OnGameOver;
+    public static void GameOver() => OnGameOver?.Invoke();
 }

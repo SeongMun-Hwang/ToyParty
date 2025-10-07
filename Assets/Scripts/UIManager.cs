@@ -11,6 +11,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI pierrotMissionText;
     public TextMeshProUGUI moveCountText;
     public GameObject clearPanel;
+    public GameObject GameOverPanel; 
 
     [Header("Score UI")]
     public TextMeshProUGUI scoreTmp;
@@ -30,6 +31,10 @@ public class UIManager : MonoBehaviour
         {
             clearPanel.SetActive(false);
         }
+        if (GameOverPanel != null) 
+        {
+            GameOverPanel.SetActive(false);
+        }
         UpdateScoreUI(0); // 시작할 때 점수 UI 초기화
     }
 
@@ -41,6 +46,7 @@ public class UIManager : MonoBehaviour
         GameEvents.OnMissionComplete += ShowClearPanel;
         GameEvents.OnScoreUpdated += UpdateScoreUI;
         GameEvents.OnScoreGained += ShowScorePopup;
+        GameEvents.OnGameOver += ShowGameOverPanel;
     }
 
     private void OnDisable()
@@ -51,6 +57,7 @@ public class UIManager : MonoBehaviour
         GameEvents.OnMissionComplete -= ShowClearPanel;
         GameEvents.OnScoreUpdated -= UpdateScoreUI;
         GameEvents.OnScoreGained -= ShowScorePopup;
+        GameEvents.OnGameOver -= ShowGameOverPanel;
     }
 
     private void UpdatePierrotText(int count)
@@ -76,6 +83,15 @@ public class UIManager : MonoBehaviour
             clearPanel.SetActive(true);
         }
     }
+
+    private void ShowGameOverPanel()
+    {
+        if (GameOverPanel != null)
+        {
+            GameOverPanel.SetActive(true);
+        }
+    }
+
     public void OnRestartBtnClicked()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);

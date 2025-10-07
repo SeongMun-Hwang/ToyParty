@@ -165,6 +165,13 @@ public class HexBoard : MonoBehaviour
             maxMoves--;
             GameEvents.MoveCountUpdate(maxMoves);
             RemoveAndRefill(matches);
+
+            if (maxMoves <= 0 && pierrotMissionCount > 0 && !isGameEnded)
+            {
+                isGameEnded = true;
+                GameEvents.GameOver();
+                Debug.Log("게임 오버!");
+            }
         }
         else
         {

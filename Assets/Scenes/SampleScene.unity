@@ -1343,6 +1343,7 @@ MonoBehaviour:
   pierrotMissionText: {fileID: 1466816462}
   moveCountText: {fileID: 700409360}
   clearPanel: {fileID: 450473845}
+  GameOverPanel: {fileID: 1260153842}
   scoreTmp: {fileID: 284116259}
   scoreProgressImg: {fileID: 1623128478}
   scoreStars:
