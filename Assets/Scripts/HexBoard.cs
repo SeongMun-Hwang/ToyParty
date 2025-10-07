@@ -366,7 +366,65 @@ public class HexBoard : MonoBehaviour
                 }
             }
         }
+        FindRhombusMatches(matchedTiles);
         return matchedTiles.ToList();
+    }
+
+    void FindRhombusMatches(HashSet<MatchTile> matchedTiles)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                Vector2Int t1Pos = new Vector2Int(x, y);
+                MatchTile t1 = matchTiles[t1Pos.x, t1Pos.y];
+                if (t1 == null || t1.type != MatchTile.TileType.Normal) continue;
+
+                int[] dirsToTest = { 0, 1, 2 };
+                var t1NeighborOffsets = (t1Pos.x % 2 == 0) ? evenColNeighbors : oddColNeighbors;
+
+                foreach (int dir in dirsToTest)
+                {
+                    Vector2Int t2Pos = new Vector2Int(t1Pos.x + t1NeighborOffsets[dir].x, t1Pos.y + t1NeighborOffsets[dir].y);
+
+                    if (!IsInBounds(t2Pos)) continue;
+                    MatchTile t2 = matchTiles[t2Pos.x, t2Pos.y];
+                    if (t2 == null || t2.type != MatchTile.TileType.Normal) continue;
+
+                    List<Vector2Int> t1Neighbors = new List<Vector2Int>();
+                    var t1Offsets = (t1Pos.x % 2 == 0) ? evenColNeighbors : oddColNeighbors;
+                    foreach (var offset in t1Offsets) t1Neighbors.Add(t1Pos + offset);
+
+                    List<Vector2Int> t2Neighbors = new List<Vector2Int>();
+                    var t2Offsets = (t2Pos.x % 2 == 0) ? evenColNeighbors : oddColNeighbors;
+                    foreach (var offset in t2Offsets) t2Neighbors.Add(t2Pos + offset);
+
+                    var common = t1Neighbors.Intersect(t2Neighbors).ToList();
+
+                    if (common.Count == 2)
+                    {
+                        Vector2Int t3Pos = common[0];
+                        Vector2Int t4Pos = common[1];
+
+                        if (!IsInBounds(t3Pos) || !IsInBounds(t4Pos)) continue;
+
+                        MatchTile t3 = matchTiles[t3Pos.x, t3Pos.y];
+                        MatchTile t4 = matchTiles[t4Pos.x, t4Pos.y];
+
+                        if (t3 != null && t4 != null && t3.type == MatchTile.TileType.Normal && t4.type == MatchTile.TileType.Normal)
+                        {
+                            if (t1.color == t2.color && t1.color == t3.color && t1.color == t4.color)
+                            {
+                                matchedTiles.Add(t1);
+                                matchedTiles.Add(t2);
+                                matchedTiles.Add(t3);
+                                matchedTiles.Add(t4);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     void CheckAxis(MatchTile startTile, int dir1, int dir2, HashSet<MatchTile> matchedTiles)
