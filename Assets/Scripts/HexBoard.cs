@@ -26,6 +26,7 @@ public class HexBoard : MonoBehaviour
 
     private MatchTile[,] matchTiles;
     private bool isGameEnded = false;
+    private bool isBoardBusy = false;
     private int totalScore = 0;
 
     [Header("Mission")]
@@ -136,6 +137,7 @@ public class HexBoard : MonoBehaviour
 
     public void AttemptSwap(MatchTile tile, Vector2 dragDirection)
     {
+        if (isBoardBusy) { tile.ResetPosition(); return; }
         if (isGameEnded) return;
         if (maxMoves <= 0) return; // 이동 횟수 없으면 스왑 불가
 
@@ -155,6 +157,8 @@ public class HexBoard : MonoBehaviour
 
     private IEnumerator SwapAndCheck(MatchTile tileA, MatchTile tileB)
     {
+        isBoardBusy = true;
+
         SwapTiles(tileA, tileB);
         yield return new WaitForSeconds(0.15f);
 
@@ -177,6 +181,7 @@ public class HexBoard : MonoBehaviour
         {
             yield return new WaitForSeconds(0.15f);
             SwapTiles(tileA, tileB);
+            isBoardBusy = false;
         }
     }
 
@@ -342,6 +347,10 @@ public class HexBoard : MonoBehaviour
         if (newMatches.Count > 0)
         {
             RemoveAndRefill(newMatches);
+        }
+        else
+        {
+            isBoardBusy = false;
         }
     }
 
